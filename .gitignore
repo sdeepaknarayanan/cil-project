@@ -1,4 +1,9 @@
-Vanilla Dataset/*
-mass-data/*
-Mass Dataset/*
-.ipynb_checkpoints/*
+Vanilla Dataset
+mass-data
+Mass Dataset
+.ipynb_checkpoints
+__pycache__
+unet_trained
+Output
+unet_ftm*
+*.csv

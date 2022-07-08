@@ -1,5 +1,6 @@
 import torch
 import torch.nn as nn
+import numpy as np
 import cv2
 from torch.utils.data import Dataset, DataLoader
 from albumentations.pytorch import ToTensorV2
@@ -127,78 +128,83 @@ class RoadSegmentData(Dataset):
             mask = transformed_image['mask']
         return image, mask
 
-img_transform = A.Compose(
-    [
-        A.RandomRotate90(),
-        ToTensorV2(transpose_mask=True)
-    ]
-)
+if __name__ =='__main__':
 
-image_names = [img.split('/')[-1] for img in glob.glob("./mass-data/new_images/*")]
-image_path = './mass-data/new_images/'
-mask_path = './mass-data/new_labels/'
-if os.name == 'nt':
-    image_path = './mass-data/'
-    mask_path = './mass-data/'
+    img_transform = A.Compose(
+        [
+            A.RandomRotate90(),
+            ToTensorV2(transpose_mask=True)
+        ]
+    )
 
-train_image_names, test_validate_image_names = train_test_split(image_names, train_size=0.8)
-test_image_names, validate_image_names = train_test_split(test_validate_image_names, test_size=0.5)
-train_data = RoadSegmentData(train_image_names, image_path, mask_path, img_transform)
-test_data = RoadSegmentData(test_image_names, image_path, mask_path, img_transform)
-validate_data = RoadSegmentData(validate_image_names, image_path, mask_path, img_transform)
+    image_names = [img.split('/')[-1] for img in glob.glob("./mass-data/new_images/*")]
+    image_path = './mass-data/new_images/'
+    mask_path = './mass-data/new_labels/'
+    if os.name == 'nt':
+        image_path = './mass-data/'
+        mask_path = './mass-data/'
 
-# Hyperparameters
-learning_rate = 1e-4
-batch_size = 16
-epochs = 1
+    train_image_names, test_validate_image_names = train_test_split(image_names, train_size=0.8)
+    test_image_names, validate_image_names = train_test_split(test_validate_image_names, test_size=0.5)
+    train_data = RoadSegmentData(train_image_names, image_path, mask_path, img_transform)
+    test_data = RoadSegmentData(test_image_names, image_path, mask_path, img_transform)
+    validate_data = RoadSegmentData(validate_image_names, image_path, mask_path, img_transform)
 
-# Train loop
-train_dataloader = DataLoader(train_data, batch_size=batch_size, shuffle=True)
-validate_dataloader = DataLoader(validate_data, batch_size=batch_size)
-model = UNet()
-model = model.cuda()
-loss_fn = DiceLoss()
-model.train()
-optimizer = torch.optim.Adam(model.parameters(), lr = learning_rate)
+    # Hyperparameters
+    learning_rate = 1e-4
+    batch_size = 8
+    epochs = 100
 
-for epoch in range(epochs):
+    # Train loop
+    train_dataloader = DataLoader(train_data, batch_size=batch_size, shuffle=True)
+    validate_dataloader = DataLoader(validate_data, batch_size=batch_size)
+    model = UNet()
+    model = model.cuda()
+    loss_fn = DiceLoss()
     model.train()
-    for batch, (x, y_true) in enumerate(train_dataloader):
-        x = x.float().cuda()
-        y_true = y_true.float().cuda()
-        y_pred = model(x)
-        assert y_true.numel() == y_pred.numel()
-        loss = loss_fn(y_true, y_pred)
+    optimizer = torch.optim.Adam(model.parameters(), lr = learning_rate)
 
-        # Backprop
-        optimizer.zero_grad()
-        loss.backward()
-        optimizer.step()
-
-    # Validation
-    validation_loss = 0.0
-    model.eval()
-    with torch.no_grad():
-        for batch, (x, y_true) in enumerate(validate_dataloader):
+    for epoch in range(epochs):
+        model.train()
+        for batch, (x, y_true) in enumerate(train_dataloader):
             x = x.float().cuda()
             y_true = y_true.float().cuda()
             y_pred = model(x)
-            validation_loss += loss_fn(y_true, y_pred).item()
-    validation_loss /= (batch+1)
-    print(f"Epoch {(epoch+1)} Validation Loss: {validation_loss:5.4}")
+            assert y_true.numel() == y_pred.numel()
+            loss = loss_fn(y_true, y_pred)
+
+            # Backprop
+            optimizer.zero_grad()
+            loss.backward()
+            optimizer.step()
+
+        # Validation
+        validation_loss = 0.0
+        model.eval()
+        with torch.no_grad():
+            for batch, (x, y_true) in enumerate(validate_dataloader):
+                x = x.float().cuda()
+                y_true = y_true.float().cuda()
+                y_pred = model(x)
+                validation_loss += loss_fn(y_true, y_pred).item()
+        validation_loss /= (batch+1)
+        print(f'Epoch {(epoch+1)} Validation Loss: {validation_loss:5.4}')
+        if (epoch+1)%10 == 0:
+            torch.save(model, f'Model Epoch {epoch+1}')
 
 
-
-# Test loop
-test_dataloader = DataLoader(test_data, batch_size=batch_size)
-model.eval()
-with torch.no_grad():
-    acc = 0
-    for batch, (x, y_true) in enumerate(test_dataloader):
-        x = x.float().cuda()
-        y_true = y_true.float().cuda()
-        y_pred = model(x)
-        assert y_true.numel() == y_pred.numel()
-        acc += (torch.ceil(torch.relu(y_pred - 0.5)) == y_true).sum().item()/y_true.numel()
-    acc /= (batch+1)
-    print(f"Test accuracy: {(acc*100):6.3} %")
+    # Test loop
+    test_dataloader = DataLoader(test_data, batch_size=1)
+    model.eval()
+    with torch.no_grad():
+        acc = 0
+        for batch, (x, y_true) in enumerate(test_dataloader):
+            x = x.float().cuda()
+            y_true = y_true.float().cuda()
+            y_pred = model(x)
+            assert y_true.numel() == y_pred.numel()
+            acc += (torch.ceil(torch.relu(y_pred - 0.5)) == y_true).sum().item()/y_true.numel()
+        np.save('true_img',y_true[0,:,:,:].to('cpu').numpy())
+        np.save('pred_img',y_pred[0,:,:,:].to('cpu').numpy())
+        acc /= (batch+1)
+        print(f"Test accuracy: {(acc):6.5} %")
