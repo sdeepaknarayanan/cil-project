@@ -132,17 +132,20 @@ if __name__ =='__main__':
 
     img_transform = A.Compose(
         [
+            A.VerticalFlip(),
+            A.RGBShift(r_shift_limit=10, g_shift_limit=10, b_shift_limit=10),
+            A.RandomBrightnessContrast(brightness_limit=0.3, contrast_limit=0.3, p=0.6),
             A.RandomRotate90(),
             ToTensorV2(transpose_mask=True)
         ]
     )
 
-    image_names = [img.split('/')[-1] for img in glob.glob("./mass-data/new_images/*")]
-    image_path = './mass-data/new_images/'
-    mask_path = './mass-data/new_labels/'
+    image_names = [img.split('/')[-1] for img in glob.glob("./gmap_data/images/*")]
+    image_path = './gmap_data/images/'
+    mask_path = './gmap_data/groundtruth/'
     if os.name == 'nt':
-        image_path = './mass-data/'
-        mask_path = './mass-data/'
+        image_path = './gmap_data/'
+        mask_path = './gmap_data/'
 
     train_image_names, test_validate_image_names = train_test_split(image_names, train_size=0.8)
     test_image_names, validate_image_names = train_test_split(test_validate_image_names, test_size=0.5)
@@ -152,17 +155,18 @@ if __name__ =='__main__':
 
     # Hyperparameters
     learning_rate = 1e-4
-    batch_size = 8
-    epochs = 100
+    batch_size = 6
+    epochs = 200
 
     # Train loop
     train_dataloader = DataLoader(train_data, batch_size=batch_size, shuffle=True)
     validate_dataloader = DataLoader(validate_data, batch_size=batch_size)
-    model = UNet()
+    model = UNet(chs = [3, 64, 128, 256, 512, 1024])
     model = model.cuda()
     loss_fn = DiceLoss()
     model.train()
     optimizer = torch.optim.Adam(model.parameters(), lr = learning_rate)
+    scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(optimizer)
 
     for epoch in range(epochs):
         model.train()
@@ -188,8 +192,9 @@ if __name__ =='__main__':
                 y_pred = model(x)
                 validation_loss += loss_fn(y_true, y_pred).item()
         validation_loss /= (batch+1)
+        scheduler.step(validation_loss)
         print(f'Epoch {(epoch+1)} Validation Loss: {validation_loss:5.4}')
-        if (epoch+1)%10 == 0:
+        if (epoch+1)%5 == 0:
             torch.save(model, f'Model Epoch {epoch+1}')
 
 

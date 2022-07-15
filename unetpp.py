@@ -11,8 +11,9 @@ import albumentations as A
 
 
 # Model
+# Reference: https://github.com/4uiiurz1/pytorch-nested-unet/blob/557ea02f0b5d45ec171aae2282d2cd21562a633e/archs.py
 
-class UNet(nn.Module):
+class UNetPP(nn.Module):
 
     @staticmethod
     def UnetLayer(in_ch, out_ch, conv_dim = (3,3), pad = 1):
@@ -27,63 +28,60 @@ class UNet(nn.Module):
 
     
     def __init__(self, chs = [3, 32, 64, 128, 256, 512]):
-        super(UNet, self).__init__()
-        out_chs = list(reversed(chs))[:-1]
-        self.enc_layers = nn.ModuleList([UNet.UnetLayer(chs[i], chs[i+1]) for i in range(len(chs) - 1)])
-        self.dec_layers = nn.ModuleList([UNet.UnetLayer(out_chs[i], out_chs[i+1]) for i in range(len(out_chs) - 1)])
+        super(UNetPP, self).__init__()
+
+        self.conv0_0 = UNetPP.UnetLayer(chs[0], chs[1])
+        self.conv1_0 = UNetPP.UnetLayer(chs[1], chs[2])
+        self.conv2_0 = UNetPP.UnetLayer(chs[2], chs[3])
+        self.conv3_0 = UNetPP.UnetLayer(chs[3], chs[4])
+        self.conv4_0 = UNetPP.UnetLayer(chs[4], chs[5])
+
+        self.conv0_1 = UNetPP.UnetLayer(chs[1]+chs[2], chs[1])
+        self.conv1_1 = UNetPP.UnetLayer(chs[2]+chs[3], chs[2])
+        self.conv2_1 = UNetPP.UnetLayer(chs[3]+chs[4], chs[3])
+        self.conv3_1 = UNetPP.UnetLayer(chs[4]+chs[5], chs[4])
+
+        self.conv0_2 = UNetPP.UnetLayer(chs[1]*2+chs[2], chs[1])
+        self.conv1_2 = UNetPP.UnetLayer(chs[2]*2+chs[3], chs[2])
+        self.conv2_2 = UNetPP.UnetLayer(chs[3]*2+chs[4], chs[3])
+
+        self.conv0_3 = UNetPP.UnetLayer(chs[1]*3+chs[2], chs[1])
+        self.conv1_3 = UNetPP.UnetLayer(chs[2]*3+chs[3], chs[2])
+
+        self.conv0_4 = UNetPP.UnetLayer(chs[1]*4+chs[2], chs[1])
+        
         self.final = nn.Sequential(
-            nn.Conv2d(out_chs[-1],1,1),
+            nn.Conv2d(chs[1],1,1),
             nn.Sigmoid()
             )
         self.pool = nn.MaxPool2d(2,2)
-        # UpConv
-        self.un_pool = nn.ModuleList([nn.ConvTranspose2d(out_chs[i], out_chs[i+1],2,2) for i in range(len(out_chs) - 1)])
+        # Upsample
+        self.up = nn.Upsample(scale_factor=2, mode='bilinear', align_corners=True)
 
-    def _forward_general(self,x):
-        # Encoder
-        layer_outs = []
-        for layer in self.enc_layers:
-            x = layer(x)
-            layer_outs.append(x)
-            x = self.pool(x)
-
-        layer_outs.reverse()
-        # Decoder
-        for layer, copy, un_pool in zip(self.dec_layers, layer_outs, self.un_pool):
-            x = un_pool(x)
-            x = torch.cat((x,copy), dim=1)
-            x = layer(x)
-
-        x = self.final(x)
-        return x
-
-    def _forward_unrolled(self,x):
+    def forward(self,x):
         # Enconder
-        encls = self.enc_layers
-        enc_1 = encls[0](x)
-        enc_2 = encls[1](self.pool(enc_1))
-        enc_3 = encls[2](self.pool(enc_2))
-        enc_4 = encls[3](self.pool(enc_3))
+        x0_0 = self.conv0_0(x)
+        x1_0 = self.conv1_0(self.pool(x0_0))
+        x0_1 = self.conv0_1(torch.cat([x0_0, self.up(x1_0)], 1))
 
-        bottleneck = encls[4](self.pool(enc_4))
+        x2_0 = self.conv2_0(self.pool(x1_0))
+        x1_1 = self.conv1_1(torch.cat([x1_0, self.up(x2_0)], 1))
+        x0_2 = self.conv0_2(torch.cat([x0_0, x0_1, self.up(x1_1)], 1))
 
-        # Decoder
-        outls = self.dec_layers
-        un_pool = self.un_pool
-        dec_1 = torch.cat((un_pool[0](bottleneck),enc_4),dim=1)
-        dec_1 = outls[0](dec_1)
-        dec_2 = torch.cat((un_pool[1](dec_1),enc_3),dim=1)
-        dec_2 = outls[1](dec_2)
-        dec_3 = torch.cat((un_pool[2](dec_2),enc_2),dim=1)
-        dec_3 = outls[2](dec_3)
-        dec_4 = torch.cat((un_pool[3](dec_3),enc_1),dim=1)
-        dec_4 = outls[3](dec_4)
+        x3_0 = self.conv3_0(self.pool(x2_0))
+        x2_1 = self.conv2_1(torch.cat([x2_0, self.up(x3_0)], 1))
+        x1_2 = self.conv1_2(torch.cat([x1_0, x1_1, self.up(x2_1)], 1))
+        x0_3 = self.conv0_3(torch.cat([x0_0, x0_1, x0_2, self.up(x1_2)], 1))
 
-        final = self.final(dec_4)
-        return final
+        x4_0 = self.conv4_0(self.pool(x3_0))
+        x3_1 = self.conv3_1(torch.cat([x3_0, self.up(x4_0)], 1))
+        x2_2 = self.conv2_2(torch.cat([x2_0, x2_1, self.up(x3_1)], 1))
+        x1_3 = self.conv1_3(torch.cat([x1_0, x1_1, x1_2, self.up(x2_2)], 1))
+        x0_4 = self.conv0_4(torch.cat([x0_0, x0_1, x0_2, x0_3, self.up(x1_3)], 1))
 
-    # Edit this to change forward pass
-    forward = _forward_unrolled
+        output = self.final(x0_4)
+        return output
+
 
 # Reference: https://github.com/mateuszbuda/brain-segmentation-pytorch/blob/master/loss.py
 class DiceLoss(nn.Module):
@@ -132,17 +130,20 @@ if __name__ =='__main__':
 
     img_transform = A.Compose(
         [
+            A.VerticalFlip(),
+            A.RGBShift(r_shift_limit=10, g_shift_limit=10, b_shift_limit=10),
+            A.RandomBrightnessContrast(brightness_limit=0.3, contrast_limit=0.3, p=0.6),
             A.RandomRotate90(),
             ToTensorV2(transpose_mask=True)
         ]
     )
 
-    image_names = [img.split('/')[-1] for img in glob.glob("./mass-data/new_images/*")]
-    image_path = './mass-data/new_images/'
-    mask_path = './mass-data/new_labels/'
+    image_names = [img.split('/')[-1] for img in glob.glob("./gmap_data/images/*")]
+    image_path = './gmap_data/images/'
+    mask_path = './gmap_data/groundtruth/'
     if os.name == 'nt':
-        image_path = './mass-data/'
-        mask_path = './mass-data/'
+        image_path = './gmap_data/'
+        mask_path = './gmap_data/'
 
     train_image_names, test_validate_image_names = train_test_split(image_names, train_size=0.8)
     test_image_names, validate_image_names = train_test_split(test_validate_image_names, test_size=0.5)
@@ -158,11 +159,12 @@ if __name__ =='__main__':
     # Train loop
     train_dataloader = DataLoader(train_data, batch_size=batch_size, shuffle=True)
     validate_dataloader = DataLoader(validate_data, batch_size=batch_size)
-    model = UNet()
+    model = UNetPP()
     model = model.cuda()
     loss_fn = DiceLoss()
     model.train()
     optimizer = torch.optim.Adam(model.parameters(), lr = learning_rate)
+    scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(optimizer)
 
     for epoch in range(epochs):
         model.train()
@@ -188,6 +190,7 @@ if __name__ =='__main__':
                 y_pred = model(x)
                 validation_loss += loss_fn(y_true, y_pred).item()
         validation_loss /= (batch+1)
+        scheduler.step(validation_loss)
         print(f'Epoch {(epoch+1)} Validation Loss: {validation_loss:5.4}')
         if (epoch+1)%10 == 0:
             torch.save(model, f'Model Epoch {epoch+1}')

@@ -7,3 +7,6 @@ unet_trained
 Output
 unet_ftm*
 *.csv
+*gmap*
+*.png
+Dataset Generation*
