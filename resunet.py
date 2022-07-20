@@ -97,13 +97,7 @@ class build_resunet(nn.Module):
 
         """ output """
         output = self.output(d3)
-        # output = self.sigmoid(output)
-
         return output
+        #output = self.sigmoid(output)
 
-
-# if __name__ == "__main__":
-#     inputs = torch.randn((1, 3, 400, 400))
-#     model = build_resunet()
-#     y = model(inputs)
-#     print(y.shape)
+        #return output

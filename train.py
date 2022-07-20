@@ -12,7 +12,7 @@ import copy
 import numpy as np
 import pickle as pkl
 import argparse
-from models import build_resnet, build_resunet, build_resunet_symmetric
+from models import build_resnet, build_resunet, build_resunet_symmetric, build_xception
 from utils import *
 from parser import parser
 import json 
@@ -119,6 +119,11 @@ elif args.model == 'resunet':
     model = build_resunet().cuda()
 elif args.model == 'resunet_symmetric':
     model = build_resunet_symmetric().cuda()
+elif args.model == 'xception':
+    if args.pretr == 1:
+        model = build_xception(pretrained=True).cuda()
+    else:
+        model = build_xception(pretrained=False).cuda()
 else:
     print("Not a Valid Model!!! Exiting")
     sys.exit(0)

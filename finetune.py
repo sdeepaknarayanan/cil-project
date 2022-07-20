@@ -16,6 +16,7 @@ from models import build_resnet, build_resunet, build_resunet_symmetric
 from utils import *
 from parser import parser
 import json
+import sys
 
 args = parser.parse_args()
 
@@ -160,8 +161,8 @@ for epoch in range(args.epochs):
 
             if val_loss > best_val:
                 early_stop_count+=1
-                if early_stop_count == 30:
-                    print("No Improvement for 30 epochs! Exiting!")
+                if early_stop_count == 150:
+                    print("No Improvement for 150 epochs! Exiting!")
                     torch.save(model, save_path + f"/last_ft_early_stop_{epoch}")
                     sys.exit(0)
 
