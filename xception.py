@@ -1,3 +1,8 @@
+"""
+A part of the Xception Network Code and loading Pre-Trained Weights are borrowed from 
+https://github.com/Cadene/pretrained-models.pytorch/blob/master/pretrainedmodels/models/xception.py
+"""
+
 from __future__ import print_function, division, absolute_import
 import math
 import torch
@@ -8,7 +13,6 @@ from torch.nn import init
 from resnet import ConvBlock, Bridge, UpBlockForUNetWithResNet50
 import ssl
 ssl._create_default_https_context = ssl._create_unverified_context
-
 
 __all__ = ['xception']
 
@@ -116,7 +120,6 @@ class Xception(nn.Module):
         self.conv2 = nn.Conv2d(32,64,3,bias=False)
         self.bn2 = nn.BatchNorm2d(64)
         self.relu2 = nn.ReLU(inplace=True)
-        #do relu here
 
         self.block1=Block(64,128,2,2,start_with_relu=False,grow_first=True)
         self.block2=Block(128,256,2,2,start_with_relu=True,grow_first=True)
@@ -213,7 +216,6 @@ class build_xception(nn.Module):
     def __init__(self, pretrained=True):
         super().__init__()
         if pretrained == True:
-
             model = xception(num_classes=1000, pretrained='imagenet')
         else:
             model = Xception()
@@ -262,15 +264,12 @@ class build_xception(nn.Module):
         for i, block in enumerate(self.up_blocks, 1):
             if i == 1:
                 x = block(x, ops[11][-1])
-            elif i == 2:
+            if i == 2:
                 x = block(x, ops[3][0])
-            elif i == 3:
+            if i == 3:
                 x = block(x, nn.ZeroPad2d((1,0,1,0))(ops[2][0]))
-            elif i == 4:
+            if i == 4:
                 x = block(x, nn.ZeroPad2d((3, 0, 3, 0))(ops[1][0]))
-            else:
-                print("Weird Behavior")
-
         x = self.final_conv_trans(x)
         x = self.final_conv_1(x)
         x = self.out(x)
