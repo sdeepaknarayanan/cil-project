@@ -144,16 +144,6 @@ class Xception(nn.Module):
 
         self.fc = nn.Linear(2048, num_classes)
 
-        # #------- init weights --------
-        # for m in self.modules():
-        #     if isinstance(m, nn.Conv2d):
-        #         n = m.kernel_size[0] * m.kernel_size[1] * m.out_channels
-        #         m.weight.data.normal_(0, math.sqrt(2. / n))
-        #     elif isinstance(m, nn.BatchNorm2d):
-        #         m.weight.data.fill_(1)
-        #         m.bias.data.zero_()
-        # #-----------------------------
-
     def features(self, input):
         x = self.conv1(input)
         x = self.bn1(x)
@@ -213,7 +203,6 @@ def xception(num_classes=1000, pretrained='imagenet'):
         model.mean = settings['mean']
         model.std = settings['std']
 
-    # TODO: ugly
     model.last_linear = model.fc
     del model.fc
     return model
@@ -247,7 +236,7 @@ class build_xception(nn.Module):
         up_blocks.append(UpBlockForUNetWithResNet50(256 + 728, 256, up_conv_in_channels=1024, up_conv_out_channels=256, flag="odd"))
         up_blocks.append(UpBlockForUNetWithResNet50(256 + 256, 256, up_conv_in_channels=256, up_conv_out_channels=256))
         up_blocks.append(UpBlockForUNetWithResNet50(256, 128, up_conv_in_channels=256, up_conv_out_channels=128))
-        up_blocks.append( UpBlockForUNetWithResNet50(128, 64))
+        up_blocks.append(UpBlockForUNetWithResNet50(128, 64))
 
         self.up_blocks = nn.ModuleList(up_blocks)
 

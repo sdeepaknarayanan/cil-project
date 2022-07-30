@@ -8,39 +8,37 @@ import torch.nn as nn
 import torchvision
 from torch.utils.data import Dataset, DataLoader
 from albumentations.pytorch import ToTensorV2
-import copy
 import numpy as np
 import pickle as pkl
-import argparse
-from models import build_resnet, build_resunet, build_resunet_symmetric, build_xception
+from models import build_resnet, build_resunet, build_resunet_symmetric, build_xception, UNet
 from utils import *
-from parser import parser
+from args_parser import parser
 import json 
 import sys
 import time
 
+
+# Parsing the commandline arguments
 args = parser.parse_args()
-
-print("Arguments: ", args)
-
-save_path = f"exps/{args.name}_Lr_{args.lr}_Ls_{args.loss}_Ep_{args.epochs}_BaSi_{args.batch_size}_Re_{args.resize}_Va_{args.valid}_Se_{args.seed}_Aug_{args.augment}_PT_{args.pretr}_WD_{args.wd}"
+save_path = f"exps/{args.name}_Lr_{args.lr}_Ls_{args.loss}_Ep_{args.epochs}_BaSi_{args.batch_size}_Re_{args.resize}_Va_{args.valid}_Se_{args.seed}_PT_{args.pretr}_WD_{args.wd}"
 
 if os.path.exists(save_path):
     print("Path Already Exists!!! Overwriting!!!")
 else:
     os.makedirs(save_path)
 
+# Logging
 with open(save_path+'/config.json', 'w') as fp:
     json.dump(args.__dict__, fp)
 
 f = open(save_path+"/train_log.txt", "w")
 
+# Setting seed for reproducibility
 np.random.seed(args.seed)
 torch.manual_seed(args.seed)
 
-print("Making Train/Val Lists")
 
-
+# Getting image names for train data
 train_images = glob.glob(args.train_image_path + '/*')
 indices = np.arange(len(train_images))
 train_ixs = np.random.choice(indices, int((1 - args.valid) * len(train_images)), replace = False)
@@ -52,38 +50,25 @@ final_train_list = []
 for ix in train_ixs:
     img = train_images[ix]
     final_train_list.append(img.split('/')[-1])
-print("Train/ Lists Done!!")
 
 if args.valid > 0:
     final_valid_list = []
     for ix in valid_ixs:
         img = train_images[ix]
         final_valid_list.append(img.split('/')[-1])
-    print("Valid/ Lists Done")
 
-if args.augment is not None:
-
-    train_transform = A.Compose(
-    [
-        A.VerticalFlip(),
-        A.ShiftScaleRotate(shift_limit=0.2, scale_limit=0.2, rotate_limit=30, p=0.6),
-        A.RGBShift(r_shift_limit=25, g_shift_limit=25, b_shift_limit=25, p=0.6),
-        A.RandomBrightnessContrast(brightness_limit=0.3, contrast_limit=0.3, p=0.6),
-        A.RandomRotate90(p=0.8),
-        ToTensorV2(transpose_mask=True)
-
-    ]
-)
-
-else:
-
-    train_transform = A.Compose(
+# Setting up data augmentation
+train_transform = A.Compose(
         [
+            A.VerticalFlip(),
+            A.RGBShift(r_shift_limit=10, g_shift_limit=10, b_shift_limit=10),
+            A.RandomBrightnessContrast(brightness_limit=0.3, contrast_limit=0.3, p=0.6),
             A.RandomRotate90(),
-            ToTensorV2(transpose_mask=True),
+            ToTensorV2(transpose_mask=True)
         ]
     )
 
+# Creating the data loaders
 train_dataset = RoadSegmentData(image_names = final_train_list, 
                        image_path = args.train_image_path + '/',
                        mask_path = args.train_mask_path + '/',
@@ -96,8 +81,6 @@ if args.valid > 0:
                            transform = ToTensorV2(transpose_mask=True),
                           resize = args.resize)
 
-print("Dataset Class Created....")
-
 train_loader = DataLoader(train_dataset, 
     batch_size = args.batch_size, 
     shuffle = True, 
@@ -108,8 +91,10 @@ if args.valid > 0:
         batch_size = args.batch_size, 
         num_workers = 1)
 
-print("Data Loaders Created!!!")
-if args.model == 'resnet':
+# Initializing the model
+if args.model== 'unet':
+    model = UNet().cuda()
+elif args.model == 'resnet':
     if args.pretr == 1:
         pretr = True
         model = build_resnet(n_classes=1, pretrained=True).cuda()
@@ -128,14 +113,13 @@ else:
     print("Not a Valid Model!!! Exiting")
     sys.exit(0)
 
-print("Waiting for model to load.....")
 optimizer = torch.optim.Adam(model.parameters(), lr=args.lr, weight_decay = args.wd)
 
 is_sig = False
 if args.loss == 'dice':
     criterion = DiceLoss()
     sigmoid = nn.Sigmoid()
-    is_sig = True
+    is_sig = True if args.model!='unet' else False
 else:
     criterion = nn.BCEWithLogitsLoss()
 
@@ -151,7 +135,8 @@ for epoch in range(args.epochs):
     for i, (images, target) in enumerate(train_loader):
         optimizer.zero_grad()
         images = images.float().cuda()
-        images = images / 255
+        if args.model != 'unet':
+            images = images / 255
         target = target.float().cuda()
         target = target / 255
         output = model(images)
@@ -167,6 +152,8 @@ for epoch in range(args.epochs):
     f.write(f"Loss for Epoch: {epoch} is {epoch_loss / (i + 1)}\n")
     f.flush()
     epoch_end_time = time.time()
+
+    # Validation and early stopping
     if args.valid > 0:
         model.eval()
         val_loss = 0
@@ -186,7 +173,8 @@ for epoch in range(args.epochs):
                     print("No Improvement for 50 epochs! Exiting!")
                     torch.save(model, save_path + f"/last_early_stop_{epoch}")
                     sys.exit(0)
-
+            
+            # Save best model
             if val_loss <= best_val:
                 best_val = val_loss
                 early_stop_count = 0
