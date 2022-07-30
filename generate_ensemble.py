@@ -6,11 +6,11 @@ import torch
 import argparse
 
 parser = argparse.ArgumentParser(description='Ensemble outputs together')
-parser.add_argument('model_list', type=str, nargs='+', help="Models to ensemble")
+parser.add_argument('output_paths', type=str, nargs='+', help="Outputs of models to ensemble")
 parser.add_argument('-s','--save_path', type=str, default='./ensemble',help="Path where to save output")
 args = parser.parse_args()
 
-output_paths = args.model_list
+output_paths = args.output_paths
 save_path = args.save_path
 
 if os.path.exists(save_path):
