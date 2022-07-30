@@ -43,14 +43,24 @@ pip3 install albumentations==1.1.0
 ### Training Different Models
 - To train a model, you need to execute the ```train.py``` script inside the ```src``` directory. 
 - The script requires you to provide the following key command line arguments:
-  - ```seed``` to set the random seed for reproducibility. Example Value: ```0```.
-  - ```valid``` to set the fraction of training data to use as validation data. Example Value: ```0.2```.
+  - ```seed``` to set the random seed for reproducibility. Example Value: ```0```
+  - ```valid``` to set the fraction of training data to use as validation data. Example Value: ```0.2```
   - ```train_image_path``` - to set the path to the train image. Example Value: ```./gmap_data/images```
   - ```train_mask_path``` - to set the path to the train masks. Example Value: ```./gmap_data/groudtruth```
   - ```batch_size``` - to set the batch size for training. Example Value: ```4```
   - ```epochs``` - to set the number of epochs to train the model. Example Value: ```200```
   - ```lr``` - to set the initial learning rate for training. Example Value: ```1e-4```
-  - ```name``` - to set the name for the experiment. Example Value: ```resnet_pretrained_finetune```
+  - ```name``` - to set the name for the experiment. Example Value: ```resnet_pretrained```
   - ```model``` - to set the model to train. Example Value: ```resnet```
   - ```pretr``` - flag to decide whether to use pre-trained weights as initialization. Example Value: ```1``` for using pre-trained weights.
   - ```wdecay``` - to include l2 regularization while training the models. Example Value: ```1e-5```
+
+An example command to execute would be the following: 
+```
+python train.py --seed 0 --valid 0.2 --train_image_path ./images --train_mask_path ./groundtruth --batch_size 4 --epochs 200 --lr 1e-4 --name xception_pretrained --model xception --pretr 1 --wdecay 0
+```
+For the ease of usage, we provide all the scripts we used for training our models in the ```scripts``` directory. All the hyperparameters are specified in the scripts themselves. 
+
+
+
+  
