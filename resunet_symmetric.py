@@ -1,3 +1,7 @@
+"""
+A part of the code was borrowed from:
+https://github.com/nikhilroxtomar/Semantic-Segmentation-Architecture/blob/main/PyTorch/resunet.py
+"""
 import torch
 import torch.nn as nn
 
@@ -107,6 +111,5 @@ class build_resunet_symmetric(nn.Module):
         d4 = self.d4(d3, skip1)
         """ output """
         output = self.output(d4)
-        # output = self.sigmoid(output)
 
         return output
