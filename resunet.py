@@ -1,3 +1,8 @@
+"""
+This code was taken from 
+https://github.com/nikhilroxtomar/Semantic-Segmentation-Architecture/blob/main/PyTorch/resunet.py
+We did not use this model in our final submission, although it could be a good alternative.
+"""
 import torch
 import torch.nn as nn
 
@@ -98,6 +103,3 @@ class build_resunet(nn.Module):
         """ output """
         output = self.output(d3)
         return output
-        #output = self.sigmoid(output)
-
-        #return output
