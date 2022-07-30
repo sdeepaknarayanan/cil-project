@@ -115,6 +115,7 @@ class RoadSegmentTestData(Dataset):
             image = transformed_image['image']
         return image
 
+# Reference: https://github.com/mateuszbuda/brain-segmentation-pytorch/blob/master/loss.py
 class DiceLoss(nn.Module):
 
     def __init__(self):

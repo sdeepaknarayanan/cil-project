@@ -12,34 +12,34 @@ import copy
 import numpy as np
 import pickle as pkl
 import argparse
-from models import build_resnet, build_resunet, build_resunet_symmetric
+from models import build_resnet, build_resunet, build_resunet_symmetric, UNet
 from utils import *
 from parser import parser
 import json
 import sys
 
+# Parsing commandline arguments
 args = parser.parse_args()
 
-print("Arguments: ", args)
-
-save_path = f"exps/{args.name}_Lr_{args.lr}_Ls_{args.loss}_Ep_{args.epochs}_BaSi_{args.batch_size}_Re_{args.resize}_Va_{args.valid}_Se_{args.seed}_Aug_{args.augment}"
+save_path = f"exps/{args.name}_Lr_{args.lr}_Ls_{args.loss}_Ep_{args.epochs}_BaSi_{args.batch_size}_Re_{args.resize}_Va_{args.valid}_Se_{args.seed}"
 
 if os.path.exists(save_path):
     print("Path Already Exists!!! Overwriting!!!")
 else:
     os.makedirs(save_path)
 
+# Logging
 with open(save_path+'/config.json', 'w') as fp:
     json.dump(args.__dict__, fp)
 
 f = open(save_path+"/finetune_log.txt", "w")
 
+# Setting the seed for reproducibility
 np.random.seed(args.seed)
 torch.manual_seed(args.seed)
 
-print("Making Train/Val Lists")
 
-
+# Getting the iamge names
 train_images = glob.glob(args.train_image_path + '/*')
 indices = np.arange(len(train_images))
 train_ixs = np.random.choice(indices, int((1 - args.valid) * len(train_images)), replace = False)
@@ -51,38 +51,25 @@ final_train_list = []
 for ix in train_ixs:
     img = train_images[ix]
     final_train_list.append(img.split('/')[-1])
-print("Train/ Lists Done!!")
 
 if args.valid > 0:
     final_valid_list = []
     for ix in valid_ixs:
         img = train_images[ix]
         final_valid_list.append(img.split('/')[-1])
-    print("Valid/ Lists Done")
 
-if args.augment is not None:
-
-    train_transform = A.Compose(
-    [
-        A.VerticalFlip(),
-        A.ShiftScaleRotate(shift_limit=0.2, scale_limit=0.2, rotate_limit=30, p=0.6),
-        A.RGBShift(r_shift_limit=25, g_shift_limit=25, b_shift_limit=25, p=0.6),
-        A.RandomBrightnessContrast(brightness_limit=0.3, contrast_limit=0.3, p=0.6),
-        A.RandomRotate90(p=0.8),
-        ToTensorV2(transpose_mask=True)
-
-    ]
-)
-
-else:
-
-    train_transform = A.Compose(
+# Setting up data augmentation
+train_transform = A.Compose(
         [
+            A.VerticalFlip(),
+            A.RGBShift(r_shift_limit=10, g_shift_limit=10, b_shift_limit=10),
+            A.RandomBrightnessContrast(brightness_limit=0.3, contrast_limit=0.3, p=0.6),
             A.RandomRotate90(),
-            ToTensorV2(transpose_mask=True),
+            ToTensorV2(transpose_mask=True)
         ]
     )
 
+# Setting up the data loaders
 train_dataset = RoadSegmentData(image_names = final_train_list, 
                        image_path = args.train_image_path + '/',
                        mask_path = args.train_mask_path + '/',
@@ -95,7 +82,6 @@ if args.valid > 0:
                            transform = ToTensorV2(transpose_mask=True),
                           resize = args.resize)
 
-print("Dataset Class Created....")
 
 train_loader = DataLoader(train_dataset, 
     batch_size = args.batch_size, 
@@ -107,6 +93,7 @@ if args.valid > 0:
         batch_size = args.batch_size, 
         num_workers = 1)
 
+# Loading pretrained model
 model = torch.load(args.load_path).cuda()
 
 optimizer = torch.optim.Adam(model.parameters(), lr=args.lr)
@@ -115,7 +102,7 @@ is_sig = False
 if args.loss == 'dice':
     criterion = DiceLoss()
     sigmoid = nn.Sigmoid()
-    is_sig = True
+    is_sig = True if args.model!='unet' else False
 else:
     criterion = nn.BCEWithLogitsLoss()
 
@@ -131,7 +118,8 @@ for epoch in range(args.epochs):
     for i, (images, target) in enumerate(train_loader):
         optimizer.zero_grad()
         images = images.float().cuda()
-        images = images / 255
+        if args.model!='unet':
+            images = images / 255
         target = target.float().cuda()
         target = target / 255
         output = model(images)
@@ -146,6 +134,8 @@ for epoch in range(args.epochs):
 
     f.write(f"Loss for Epoch: {epoch} is {epoch_loss / (i + 1)}\n")
     f.flush()
+
+    # Validation
     if args.valid > 0:
         model.eval()
         val_loss = 0
@@ -166,6 +156,7 @@ for epoch in range(args.epochs):
                     torch.save(model, save_path + f"/last_ft_early_stop_{epoch}")
                     sys.exit(0)
 
+            # Save best model
             if val_loss <= best_val:
                 best_val = val_loss
                 early_stop_count = 0

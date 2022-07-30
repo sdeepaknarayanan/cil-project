@@ -42,25 +42,7 @@ class UNet(nn.Module):
         # UpConv
         self.un_pool = nn.ModuleList([nn.ConvTranspose2d(out_chs[i], out_chs[i+1],2,2) for i in range(len(out_chs) - 1)])
 
-    def _forward_general(self,x):
-        # Encoder
-        layer_outs = []
-        for layer in self.enc_layers:
-            x = layer(x)
-            layer_outs.append(x)
-            x = self.pool(x)
-
-        layer_outs.reverse()
-        # Decoder
-        for layer, copy, un_pool in zip(self.dec_layers, layer_outs, self.un_pool):
-            x = un_pool(x)
-            x = torch.cat((x,copy), dim=1)
-            x = layer(x)
-
-        x = self.final(x)
-        return x
-
-    def _forward_unrolled(self,x):
+    def forward(self,x):
         # Enconder
         encls = self.enc_layers
         enc_1 = encls[0](x)
@@ -85,8 +67,6 @@ class UNet(nn.Module):
         final = self.final(dec_4)
         return final
 
-    # Edit this to change forward pass
-    forward = _forward_unrolled
 
 # Reference: https://github.com/mateuszbuda/brain-segmentation-pytorch/blob/master/loss.py
 class DiceLoss(nn.Module):
