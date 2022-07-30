@@ -25,13 +25,21 @@ source env/bin/activate
 python3 -m pip install -r requirements.txt
 ```
 
-If you are instead using the Euler Cluster, we suggest the following
+If you are instead using the Euler Cluster, we suggest executing the following commands
 
 ```
 env2lmod
 module load gcc/8.2.0 python_gpu/3.8.5
 pip3 install albumentations==1.1.0
 ```
+---
+### Generation of Additional Data
+- Firstly create appropriate directories for images and directories respectively.
+- Then set the values for ```sat_image_path``` and ```road_image_path``` in ```Line 51``` and ```Line 52``` of the ```data_gen_gmap.py``` script with the directories you created.  
+- Now replace the ```API_KEY = "Put your API Key here"``` in ```Line 8``` of the ```data_gen_gmap.py``` script with your Google Maps API Key.
+- Finally execute the command```python data_gen_gmap.py``` script to generate the additional data.
+---
+### Training Different Models
 
-
+---
 
