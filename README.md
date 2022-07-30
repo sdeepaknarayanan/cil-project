@@ -25,5 +25,13 @@ source env/bin/activate
 python3 -m pip install -r requirements.txt
 ```
 
+If you are instead using the Euler Cluster, we suggest the following
+
+```
+env2lmod
+module load gcc/8.2.0 python_gpu/3.8.5
+pip3 install albumentations==1.1.0
+```
+
 
 
