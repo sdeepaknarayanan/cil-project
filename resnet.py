@@ -1,3 +1,8 @@
+"""
+A part of the code was borrowed from: https://github.com/kevinlu1211/pytorch-unet-resnet-50-encoder/blob/master/u_net_resnet_50_encoder.py
+The code was edited with appropriate modifications for making our model work.
+"""
+
 import torch
 import torch.nn as nn
 import torchvision
@@ -53,7 +58,7 @@ class UpBlockForUNetWithResNet50(nn.Module):
         if up_conv_out_channels == None:
             up_conv_out_channels = out_channels
             
-        if flag == "odd":
+        if flag is "odd":
             self.upsample = nn.ConvTranspose2d(up_conv_in_channels, up_conv_out_channels, 3, 2, padding=1)
         else:
             self.upsample = nn.ConvTranspose2d(up_conv_in_channels, up_conv_out_channels, kernel_size=2, stride=2)
