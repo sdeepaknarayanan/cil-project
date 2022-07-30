@@ -10,9 +10,9 @@ from models import build_resnet, build_resunet, build_resunet_symmetric
 import argparse
 
 parser = argparse.ArgumentParser(description='Evaluate trained model with evaluation time augmentation')
-parser.add_argument('model_path', type=str, nargs='+', help="Models to ensemble")
+parser.add_argument('model_path', type=str, help="Model to evaluate")
 parser.add_argument('-i','--image_path', type=str, default= "./Vanilla Dataset/test/images", help = "Path to image")
-parser.add_argument('-s','--save_path', type=str, default='./ensemble_output',help="Path where to save output")
+parser.add_argument('-s','--save_path', type=str, default='./model_output',help="Path where to save output")
 parser.add_argument('-u', '--unet', action='store_true', help="Use this option when evaluating UNet model")
 args = parser.parse_args()
 

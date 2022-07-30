@@ -19,7 +19,7 @@ else:
     os.makedirs(save_path)
 
 
-image_names = [img.split('/')[-1] for img in glob.glob(output_paths+'/*')]
+image_names = [img.split('/')[-1] for img in glob.glob(output_paths[0]+'/*')]
 if os.name == 'nt':
     image_names = [img.split('\\')[-1] for img in image_names]
 
