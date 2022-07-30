@@ -8,6 +8,9 @@ from sklearn.model_selection import train_test_split
 import os
 import glob
 import albumentations as A
+import sys
+import random
+import argparse
 
 
 # Model
@@ -130,19 +133,44 @@ class RoadSegmentData(Dataset):
 
 if __name__ =='__main__':
 
+    # Argument parsing
+    parser = argparse.ArgumentParser(description='Train a UNet based model')
+    parser.add_argument('-s','--save_path',type=str, default= './',help= 'Path where the model is to be saved')
+    parser.add_argument('-e','--epochs', type=int, default = 200, help= 'Number of epochs to run')
+    parser.add_argument('--seed', type=int, default=0, help='Seed for Psuedo-RNG')
+    parser.add_argument('-i','--train_image_path', type=str, default='./gmap_data/images/', help='Path to train data images')
+    parser.add_argument('-l', '--mask_image_path', type=str, default='./gmap_data/groundtruth/', help='Path to train data groundtruth')
+    parser.add_argument('-b','--batch_size', type=int, default = 6, help='Batch size for training')
+    parser.add_argument('--lr', type=float, default=1e-4, help='Learning rate to use')
+
+    args = parser.parse_args()
+
+    save_path = args.save_path
+
+    if os.path.exists(save_path):
+        print("Path Already Exists. Files with the same name will be overwritten")
+    else:
+        os.makedirs(save_path)
+
+    # Setting seed
+    seed = args.seed
+    np.random.seed(seed)
+    torch.manual_seed(seed)
+    random.seed(seed)
+
     img_transform = A.Compose(
         [
+            A.VerticalFlip(),
+            A.RGBShift(r_shift_limit=10, g_shift_limit=10, b_shift_limit=10),
+            A.RandomBrightnessContrast(brightness_limit=0.3, contrast_limit=0.3, p=0.6),
             A.RandomRotate90(),
             ToTensorV2(transpose_mask=True)
         ]
     )
 
-    image_names = [img.split('/')[-1] for img in glob.glob("./mass-data/new_images/*")]
-    image_path = './mass-data/new_images/'
-    mask_path = './mass-data/new_labels/'
-    if os.name == 'nt':
-        image_path = './mass-data/'
-        mask_path = './mass-data/'
+    image_names = [img.split('/')[-1] for img in glob.glob(args.train_image_path+'/*')]
+    image_path = args.train_image_path
+    mask_path = args.mask_image_path
 
     train_image_names, test_validate_image_names = train_test_split(image_names, train_size=0.8)
     test_image_names, validate_image_names = train_test_split(test_validate_image_names, test_size=0.5)
@@ -151,11 +179,14 @@ if __name__ =='__main__':
     validate_data = RoadSegmentData(validate_image_names, image_path, mask_path, img_transform)
 
     # Hyperparameters
-    learning_rate = 1e-4
-    batch_size = 8
-    epochs = 100
+    learning_rate = args.lr
+    batch_size = args.batch_size
+    epochs = args.epochs
 
     # Train loop
+    best_val = np.inf
+    early_stop_count = 0
+
     train_dataloader = DataLoader(train_data, batch_size=batch_size, shuffle=True)
     validate_dataloader = DataLoader(validate_data, batch_size=batch_size)
     model = UNet()
@@ -163,6 +194,7 @@ if __name__ =='__main__':
     loss_fn = DiceLoss()
     model.train()
     optimizer = torch.optim.Adam(model.parameters(), lr = learning_rate)
+    scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(optimizer)
 
     for epoch in range(epochs):
         model.train()
@@ -188,23 +220,16 @@ if __name__ =='__main__':
                 y_pred = model(x)
                 validation_loss += loss_fn(y_true, y_pred).item()
         validation_loss /= (batch+1)
+        scheduler.step(validation_loss)
+        if validation_loss > best_val:
+            early_stop_count+=1
+            if early_stop_count == 50:
+                print("No Improvement for 50 epochs! Exiting!")
+                torch.save(model, save_path + f"/early_stop_{epoch}")
+                sys.exit(0)
+        else:
+            early_stop_count = 0
+            torch.save(model, save_path+f"/best_model")
         print(f'Epoch {(epoch+1)} Validation Loss: {validation_loss:5.4}')
-        if (epoch+1)%10 == 0:
-            torch.save(model, f'Model Epoch {epoch+1}')
-
-
-    # Test loop
-    test_dataloader = DataLoader(test_data, batch_size=1)
-    model.eval()
-    with torch.no_grad():
-        acc = 0
-        for batch, (x, y_true) in enumerate(test_dataloader):
-            x = x.float().cuda()
-            y_true = y_true.float().cuda()
-            y_pred = model(x)
-            assert y_true.numel() == y_pred.numel()
-            acc += (torch.ceil(torch.relu(y_pred - 0.5)) == y_true).sum().item()/y_true.numel()
-        np.save('true_img',y_true[0,:,:,:].to('cpu').numpy())
-        np.save('pred_img',y_pred[0,:,:,:].to('cpu').numpy())
-        acc /= (batch+1)
-        print(f"Test accuracy: {(acc):6.5} %")
+        if (epoch+1)%5 == 0:
+            torch.save(model, save_path + f'/Model Epoch {epoch+1}')

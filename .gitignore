@@ -4,9 +4,17 @@ Mass Dataset
 .ipynb_checkpoints
 __pycache__
 unet_trained
-Output
+Output*
 unet_ftm*
+gmap_*
+unet_gmap*
 *.csv
-*gmap*
 *.png
-Dataset Generation*
+out_*
+mask_gen*
+fin_*
+ensemble_*
+finetuned_*
+best_model*
+unet_eth*
+unetpp_*
