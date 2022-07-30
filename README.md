@@ -1,4 +1,9 @@
 # CIL 2022 Road Segementation Project 
+
+### Team: DL_goes_brrrrrr
+Members: Deepak Narayanan (dsridharan@student.ethz.ch), Vraj Patel (vpatel@student.ethz.ch), Paula Vidas (pvidas@student.ethz.ch)
+
+------
 Our codebase has the following different components
 - Generation of Additional Data From Google Maps API
 - Training Different Models (Baselines, UNet, UNet with different Encoders)
@@ -38,7 +43,7 @@ pip3 install albumentations==1.1.0
 - Firstly create appropriate directories for images and directories respectively.
 - Then set the values for ```sat_image_path``` and ```road_image_path``` in ```Line 51``` and ```Line 52``` of the ```data_gen_gmap.py``` script with the directories you created.  
 - Now replace the ```API_KEY = "Put your API Key here"``` in ```Line 8``` of the ```data_gen_gmap.py``` script with your Google Maps API Key.
-- Finally execute the command```python data_gen_gmap.py``` script to generate the additional data.
+- Finally execute the command```python data_gen_gmap.py``` to generate the additional data.
 ---
 ### Training Different Models
 - To train a model, you need to execute the ```train.py``` script inside the ```src``` directory. 
@@ -77,4 +82,23 @@ python finetune.py --train_image_path ../kaggle/images --train_mask_path ../kagg
 ```
 ---
 ### Evaluation
+There are 2 evaluation scripts which have the same command-line argument format. Use ```model_eval.py``` for simply evaluating the model and ```model_eval_augment.py``` to evaluate using evaluation time augmentation. Use the following arguments:
+- The first compulsory argument is ```model_path``` which is the path to the trained model.
+- ```-i``` (or ```--image_path```) for specifying the path to the satellite images.
+- ```-s``` (or ```--save_path```) for specifying the path where the model should be saved.
+- ```-u``` (or ```--unet```) is an optional argument to be used when the model to be evaluated is vanilla UNet.
 
+A sample command to evaluate a model would be the following:
+```
+python model_eval.py ./unet_finetuned_model --image_path ./kaggle_data/test/images --save_path ./unet_finetuned_output --unet
+```
+---
+### Ensembling
+For generating the ensemble output, first you generate the output for each of the individual models using the evaluation scripts mentioned in the previous section. Then use ```generate_ensemble.py``` with the following arguments to get the ensembled output:
+- The first compulsory argument is ```output_paths``` where you give a space-separated list of path to models outputs you want to ensemble.
+- ```-s``` (or ```--save_path```) for specifying the path where the model should be saved.
+
+A sample commmand to ensemble the outputs for 2 different model outputs would be the following:
+```
+python generate_ensemble.py ./unet_finetuned_output/final ./resnet_finetuned_output/final --save_path ./ensemble
+```
