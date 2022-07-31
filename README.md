@@ -82,7 +82,7 @@ python finetune.py --train_image_path ../kaggle/images --train_mask_path ../kagg
 ```
 ---
 ### Evaluation
-There are 2 evaluation scripts which have the same command-line argument format. Use ```model_eval.py``` for simply evaluating the model and ```model_eval_augment.py``` to evaluate using evaluation time augmentation. Use the following arguments:
+There are 2 evaluation scripts in the ```src``` directory which have the same command-line argument format. Use ```model_eval.py``` for simply evaluating the model and ```model_eval_augment.py``` to evaluate using evaluation time augmentation. Use the following arguments:
 - The first compulsory argument is ```model_path``` which is the path to the trained model.
 - ```-i``` (or ```--image_path```) for specifying the path to the satellite images.
 - ```-s``` (or ```--save_path```) for specifying the path where the model should be saved.
