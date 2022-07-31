@@ -1,6 +1,11 @@
 # CIL 2022 Road Segementation Project 
+
+### Team: DL_goes_brrrrrr
+Members: Deepak Narayanan (dsridharan@student.ethz.ch), Vraj Patel (vpatel@student.ethz.ch), Paula Vidas (pvidas@student.ethz.ch)
+
+------
 Our codebase has the following different components
-- Generation of Additional Data From Google Maps API
+- Generation of Additional Data From Google Maps API ([link](https://polybox.ethz.ch/index.php/s/vGz96Lv8Mt8aTwM) to data we generated)
 - Training Different Models (Baselines, UNet, UNet with different Encoders)
 - Finetuning a trained model on a different dataset
 - Evaluation
