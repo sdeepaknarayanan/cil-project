@@ -20,15 +20,11 @@ But before that we would like to setup the packages needed for utilizing the cod
 
 We use ```Python 3.8.5``` for all our experiments. 
 
-The list of python packages that our codebase carries can be found in the ```requirements.txt``` file in the root directory above.
-
-
-If you are using a local machine, execute the following commands
+If you are using a local machine, execute the following commands to setup and activate the conda environment
 
 ```
-python3 -m venv env
-source env/bin/activate
-python3 -m pip install -r requirements.txt
+conda env create -f environment-manual.yml
+conda activate cilenv
 ```
 
 If you are instead using the Euler Cluster, execute the following commands
