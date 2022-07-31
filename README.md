@@ -23,7 +23,7 @@ We use ```Python 3.8.5``` for all our experiments.
 If you are using a local machine, execute the following commands to setup and activate the conda environment
 
 ```
-conda env create -f environment-manual.yml
+conda env create -f environment.yml
 conda activate cilenv
 ```
 
