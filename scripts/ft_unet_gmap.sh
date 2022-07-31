@@ -1,0 +1,1 @@
+python finetune.py --train_image_path ../training/images --train_mask_path ../training/groundtruth --batch_size 8 --epochs 500 --loss dice --name unet_gmap_finetune --model unet --load_path best_models_final/gmap/unet
