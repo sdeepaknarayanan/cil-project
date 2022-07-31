@@ -1,12 +1,11 @@
 import torch
-from unet_vanilla import UNet
 import albumentations as A
 from albumentations.pytorch import ToTensorV2
 import glob, os
 from torch.utils.data import Dataset, DataLoader
 import torchvision
 import cv2
-from models import build_resnet, build_resunet, build_resunet_symmetric
+from models import build_resnet, build_resunet, build_resunet_symmetric, build_xception, UNet
 import argparse
 
 parser = argparse.ArgumentParser(description='Evaluate trained model with evaluation time augmentation')
