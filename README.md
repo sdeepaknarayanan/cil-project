@@ -12,6 +12,7 @@ Our codebase has the following different components
   - Standard Evaluation without Augmentation
   - Evaluation with Augmentation
 - Ensembling the best models
+- Generating the submission file
 
 ---
 The detailed instructions for each of the components is below. 
@@ -99,3 +100,10 @@ A sample commmand to ensemble the outputs for 2 different model outputs would be
 ```
 python generate_ensemble.py ./unet_finetuned_output/final ./resnet_finetuned_output/final --save_path ./ensemble
 ```
+
+---
+The output of the ensemble is the final segmentation maps for each image, stored in the designated directory.
+
+### Generating the submission file
+To generate the CSV file to be uploaded to Kaggle, use the ```mask_to_submission.py``` script and edit ```L14``` and ```L16``` to reflect the name of your file and the directory with the output masks.
+
