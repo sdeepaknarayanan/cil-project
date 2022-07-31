@@ -58,7 +58,7 @@ class UpBlockForUNetWithResNet50(nn.Module):
         if up_conv_out_channels == None:
             up_conv_out_channels = out_channels
             
-        if flag is "odd":
+        if flag == "odd":
             self.upsample = nn.ConvTranspose2d(up_conv_in_channels, up_conv_out_channels, 3, 2, padding=1)
         else:
             self.upsample = nn.ConvTranspose2d(up_conv_in_channels, up_conv_out_channels, kernel_size=2, stride=2)
