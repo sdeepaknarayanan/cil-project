@@ -23,5 +23,5 @@ The above ```.sh``` files are used to run the individual experiments. Each ```.s
 
 ---
 
-The models obtained from all the experiments and the ones used for finetuning are available [here](https://drive.google.com/drive/u/0/folders/1vZl5hVb_daQ6rG35uUQby0mRTWAl-640), under the same name as the scripts.
+The models obtained from all the experiments and the ones used for finetuning are available [here](https://drive.google.com/drive/folders/1jD9yW-o4AmwGWXaErcm8Bbey_3kBeSyU?usp=sharing).
 
