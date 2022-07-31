@@ -1,6 +1,6 @@
 ## Scripts to run all the major experiments
 
-The above ```.sh``` files are used to run the individual experiments. Each ```.sh``` file has the hyperparameters used for running the specific experiment. 
+The above ```.sh``` files are used to run the individual experiments. Each ```.sh``` file has the hyperparameters used for running the specific experiment. The only modification required while executing these scripts is to change the path to the data. 
 
 ### Scripts for Training on Kaggle Data Only (Effect of Pretrained Weights for Initialization)
 - ```run_xception_ethz.sh``` - This script trains the X-UNet on Kaggle Data with pretrained initialization for the encoder. <br>
