@@ -14,7 +14,7 @@ import pickle as pkl
 import argparse
 from models import build_resnet, build_resunet, build_resunet_symmetric, UNet
 from utils import *
-from parser import parser
+from args_parser import parser
 import json
 import sys
 
