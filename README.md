@@ -51,7 +51,7 @@ pip3 install albumentations==1.1.0
 - The script requires you to provide the following key command line arguments:
   - ```seed``` to set the random seed for reproducibility. Example Value: ```0```
   - ```valid``` to set the fraction of training data to use as validation data. Example Value: ```0.2```
-  - ```train_image_path``` - to set the path to the train image. Example Value: ```./gmap_data/images```
+  - ```train_image_path``` - to set the path to the train images. Example Value: ```./gmap_data/images```
   - ```train_mask_path``` - to set the path to the train masks. Example Value: ```./gmap_data/groudtruth```
   - ```batch_size``` - to set the batch size for training. Example Value: ```4```
   - ```epochs``` - to set the number of epochs to train the model. Example Value: ```200```
