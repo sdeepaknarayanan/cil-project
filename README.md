@@ -46,7 +46,8 @@ pip3 install albumentations==1.1.0
 - Finally execute the command```python data_gen_gmap.py``` to generate the additional data.
 ---
 ### Training Different Models
-- To train a model, you need to execute the ```train.py``` script inside the ```src``` directory. 
+- To train the baselines, refer to the ```baselines``` directory. 
+- To train other models, you need to execute the ```train.py``` script inside the ```src``` directory. 
 - The script requires you to provide the following key command line arguments:
   - ```seed``` to set the random seed for reproducibility. Example Value: ```0```
   - ```valid``` to set the fraction of training data to use as validation data. Example Value: ```0.2```
