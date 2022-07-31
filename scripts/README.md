@@ -3,10 +3,10 @@
 The above ```.sh``` files are used to run the individual experiments. Each ```.sh``` file has the hyperparameters used for running the specific experiment. 
 
 ### Scripts for Training on Kaggle Data Only (Effect of Pretrained Weights for Initialization)
-a. ```run_xception_ethz.sh``` - This script trains the X-UNet on Kaggle Data with pretrained initialization for the encoder. 
-b. ```run_xception_ethz_nopt.sh``` - This script trains the X-UNet on Kaggle Data with random initialization for the encoder. 
-c. ```run_resnet_ethz.sh``` - This script trains the ResUNet on Kaggle Data with pretrained initialization for the encoder. 
-d. ```run_resnet_ethz_nopt.sh``` - This script trains the ResUNet on Kaggle Data with random initialization for the encoder. 
+- ```run_xception_ethz.sh``` - This script trains the X-UNet on Kaggle Data with pretrained initialization for the encoder. <br>
+- ```run_xception_ethz_nopt.sh``` - This script trains the X-UNet on Kaggle Data with random initialization for the encoder. <br>
+- ```run_resnet_ethz.sh``` - This script trains the ResUNet on Kaggle Data with pretrained initialization for the encoder. <br>
+- ```run_resnet_ethz_nopt.sh``` - This script trains the ResUNet on Kaggle Data with random initialization for the encoder. 
 
 
 ---
