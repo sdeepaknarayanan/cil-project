@@ -1,0 +1,37 @@
+name: cilenv
+channels:
+  - pytorch
+  - conda-forge
+  - anaconda
+  - defaults
+dependencies:
+  - conda
+  - python=3.8
+  - menuinst
+  - console_shortcut
+  - powershell_shortcut
+  - conda-env
+  - conda-build
+  - conda-verify
+  - _ipyw_jlab_nb_ext_conf
+  - anaconda==2021.05=py38_0
+  - anaconda-navigator
+  - navigator-updater
+  - pulp
+  - cudatoolkit=11.1
+  - absl-py
+  - pytorch==1.9.1
+  - torchaudio==0.9.1
+  - torchvision==0.10.1
+  - pipreqs
+  - pip=21.0.1
+  - pip:
+    - albumentations==1.1.0
+    - efficientnet-pytorch==0.6.3
+    - munch==2.5.0
+    - opencv-python-headless==4.5.5.64
+    - pretrainedmodels==0.7.4
+    - qudida==0.0.4
+    - segmentation-models-pytorch==0.2.1
+    - timm==0.4.12
+prefix: D:\Anaconda
