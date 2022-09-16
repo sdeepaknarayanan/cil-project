@@ -1,7 +1,6 @@
 # CIL 2022 Road Segmentation Project 
 
 ### Team: DL_goes_brrrrrr
-Members: Deepak Narayanan (dsridharan@student.ethz.ch), Vraj Patel (vpatel@student.ethz.ch), Paula Vidas (pvidas@student.ethz.ch)
 
 ------
 Our codebase has the following different components
