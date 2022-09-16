@@ -4,7 +4,7 @@
 
 ------
 Our codebase has the following different components
-- Generation of Additional Data From Google Maps API ([link](https://polybox.ethz.ch/index.php/s/vGz96Lv8Mt8aTwM) to data we generated)
+- Generation of Additional Data From Google Maps API 
 - Training Different Models (Baselines, UNet, UNet with different Encoders)
 - Finetuning a trained model on a different dataset
 - Evaluation
@@ -15,7 +15,7 @@ Our codebase has the following different components
 
 ---
 
-The models obtained from all the experiments and the ones used for finetuning are available [here](https://drive.google.com/drive/folders/1jD9yW-o4AmwGWXaErcm8Bbey_3kBeSyU?usp=sharing).
+
 
 ---
 The detailed instructions for each of the components is below. 
